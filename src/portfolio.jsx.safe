@@ -1,0 +1,1571 @@
+// ============================================================
+// portfolio.jsx  —  Vincent ASSOGBA Portfolio
+// Imports all data & base64 assets from ./data.js
+// Stack: React · CSS-in-JS · SVG icons · IntersectionObserver
+// Charte: #0F172A · #1E3A8A · #14B8A6 · #F8FAFC · #FFFFFF
+// Fonts: DM Serif Display (headings) · Cabinet Grotesk (body)
+// ============================================================
+
+import { useState, useEffect, useRef } from "react";
+import {
+  ASSETS, PROFILE, STATS, EDUCATION,
+  SKILLS, TOOLS, RESEARCH,
+  CERTIFICATIONS, ATTESTATIONS,
+  SERVICES, INTERESTS,
+} from "./data.js";
+import PdfViewer from "./pdfViewer.jsx";
+
+/* ─────────────────────────────────────────────────────
+   SVG ICON LIBRARY  (no emojis, pure SVG)
+───────────────────────────────────────────────────── */
+const Icon = ({ name, size = 20, color = "currentColor", stroke = 1.8 }) => {
+  const s = { width: size, height: size, display: "block", flexShrink: 0 };
+  const paths = {
+    // Navigation & UI
+    menu:         <><line x1="3" y1="6"  x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>,
+    x:            <><line x1="18" y1="6"  x2="6"  y2="18"/><line x1="6"  y1="6"  x2="18" y2="18"/></>,
+    chevronDown:  <polyline points="6 9 12 15 18 9"/>,
+    chevronRight: <polyline points="9 18 15 12 9 6"/>,
+    arrowDown:    <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>,
+    externalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
+    download:     <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
+    send:         <><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>,
+    check:        <polyline points="20 6 9 17 4 12"/>,
+    // Contact & Social
+    mail:         <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>,
+    phone:        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.69a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>,
+    mapPin:       <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>,
+    linkedin:     <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></>,
+    github:       <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>,
+    microscope:   <><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></>,
+    // Content
+    graduation:   <><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></>,
+    briefcase:    <><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></>,
+    chart:        <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6"  y1="20" x2="6"  y2="14"/></>,
+    activity:     <polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/>,
+    database:     <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>,
+    search:       <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    book:         <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>,
+    award:        <><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></>,
+    fileText:     <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
+    cpu:          <><rect x="9" y="9" width="6" height="6"/><path d="M20 14h1M20 10h1M4 14H3M4 10H3M14 4V3M10 4V3M14 21v-1M10 21v-1M3 7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></>,
+    trendingUp:   <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+    globe:        <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></>,
+    layers:       <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>,
+    zap:          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
+    leaf:         <path d="M2 22 16 8M16.94 6.06a1.5 1.5 0 0 0-2.12 0l-.01.01A10 10 0 0 0 12 13a10 10 0 0 0-3 6.76A10 10 0 0 0 20.76 8 10 10 0 0 0 16.94 6.06z"/>,
+    sun:          <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>,
+    bitcoin:      <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/>,
+    users:        <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+    target:       <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
+    settings:     <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+    barChart:     <><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6"  y1="20" x2="6"  y2="16"/></>,
+    pieChart:     <><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>,
+    code:         <><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></>,
+  };
+  return (
+    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color}
+      strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
+      {paths[name] || <circle cx="12" cy="12" r="10"/>}
+    </svg>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   GLOBAL CSS
+───────────────────────────────────────────────────── */
+const GlobalCSS = () => (
+  <style>{`
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Cabinet+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;overflow-wrap:break-word;word-break:break-word}
+
+:root{
+  --navy:     #0F172A;
+  --cobalt:   #1E3A8A;
+  --teal:     #14B8A6;
+  --teal-d:   #0F9489;
+  --teal-l:   #CCFBF1;
+  --teal-ll:  #F0FDFA;
+  --bg:       #F8FAFC;
+  --surface:  #FFFFFF;
+  --border:   #E2E8F0;
+  --border-d: #CBD5E1;
+  --text:     #1E293B;
+  --muted:    #64748B;
+  --muted-l:  #94A3B8;
+  --cobalt-l: #EEF2FF;
+  --gold:     #D97706;
+  --gold-l:   #FEF3C7;
+  --shadow-xs: 0 1px 2px rgba(15,23,42,.06);
+  --shadow-sm: 0 2px 8px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.05);
+  --shadow-md: 0 8px 24px rgba(15,23,42,.1),0 2px 6px rgba(15,23,42,.06);
+  --shadow-lg: 0 20px 48px rgba(15,23,42,.12),0 6px 16px rgba(15,23,42,.07);
+  --shadow-teal: 0 8px 28px rgba(20,184,166,.28);
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'Cabinet Grotesk',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--teal);border-radius:2px}
+::selection{background:var(--teal);color:#fff}
+
+/* ── Keyframes ── */
+@keyframes fadeUp    {from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeLeft  {from{opacity:0;transform:translateX(-32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeRight {from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes zoomIn    {from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes float     {0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes blink     {0%,100%{opacity:1}50%{opacity:0}}
+@keyframes spin      {to{transform:rotate(360deg)}}
+@keyframes blob      {0%,100%{border-radius:60% 40% 55% 45%/50% 60% 40% 50%}33%{border-radius:45% 55% 40% 60%/55% 45% 55% 45%}66%{border-radius:55% 45% 60% 40%/45% 55% 45% 55%}}
+@keyframes pulse     {0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.08);opacity:1}}
+@keyframes shimmer   {0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes countUp   {from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes lineGrow  {from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes gradFlow  {0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* ── Reveal classes (activated by IntersectionObserver) ── */
+.reveal{opacity:0}
+.reveal.up   {animation:fadeUp   .65s ease both}
+.reveal.left {animation:fadeLeft .65s ease both}
+.reveal.right{animation:fadeRight .65s ease both}
+.reveal.zoom {animation:zoomIn   .55s ease both}
+
+.d1{animation-delay:.06s}.d2{animation-delay:.14s}.d3{animation-delay:.22s}
+.d4{animation-delay:.30s}.d5{animation-delay:.38s}.d6{animation-delay:.46s}
+.d7{animation-delay:.54s}.d8{animation-delay:.62s}.d9{animation-delay:.70s}
+
+/* ── Layout ── */
+.wrap{max-width:1160px;margin:0 auto;padding:0 32px}
+section{padding:96px 0;position:relative}
+
+/* ── Eyebrow label ── */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10.5px;font-weight:500;letter-spacing:2px;text-transform:uppercase;
+  color:var(--teal);background:var(--teal-ll);
+  border:1px solid rgba(20,184,166,.2);
+  padding:5px 13px;border-radius:20px;margin-bottom:14px;
+}
+.eyebrow-line{width:18px;height:1.5px;background:var(--teal);border-radius:1px}
+
+/* ── Section title ── */
+.s-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(30px,4.5vw,48px);
+  font-weight:400;line-height:1.18;
+  color:var(--navy);margin-bottom:12px;
+}
+.s-title .accent{color:var(--teal)}
+.s-title .cobalt{color:var(--cobalt)}
+.s-desc{font-size:15px;color:var(--muted);max-width:520px;line-height:1.78}
+
+/* ── Card base ── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);
+  transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;
+  position:relative;overflow:hidden;
+}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:rgba(20,184,166,.3)}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;border-radius:50px;
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .22s ease;
+  text-decoration:none;border:none;letter-spacing:.2px;
+}
+.btn-teal{background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;box-shadow:var(--shadow-teal)}
+.btn-teal:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(20,184,166,.38)}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-navy:hover{background:#1e2d4a;transform:translateY(-2px)}
+.btn-ghost{background:transparent;color:var(--navy);border:2px solid var(--border)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-ll)}
+.btn-white{background:rgba(255,255,255,.12);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-white:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4)}
+
+/* ── Tag / badge ── */
+.tag{
+  display:inline-block;padding:4px 11px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:.3px;
+  background:var(--teal-ll);color:var(--teal);
+  border:1px solid rgba(20,184,166,.22);
+}
+.tag-blue{background:var(--cobalt-l);color:var(--cobalt);border-color:rgba(30,58,138,.2)}
+.tag-gold{background:var(--gold-l);color:var(--gold);border-color:rgba(217,119,6,.2)}
+
+/* ══ NAV ══ */
+#nav{position:fixed;top:0;left:0;right:0;z-index:300;transition:all .3s;border-bottom:2px solid rgba(10,191,163,.25)}
+#nav.solid{background:rgba(248,250,252,.96);backdrop-filter:blur(18px);border-bottom:2px solid rgba(10,191,163,.25);box-shadow:var(--shadow-xs)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:10px 32px;max-width:1160px;margin:0 auto}
+.nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer;text-decoration:none}
+.nav-mark{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--cobalt),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Serif Display',serif;font-size:17px;color:#fff;font-weight:400;
+}
+.nav-name{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;transition:color .3s}#nav.solid .nav-name{color:var(--navy)}
+.nav-sub{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;margin-top:1px;transition:color .3s}#nav.solid .nav-sub{color:var(--muted)}
+.nav-links{display:flex;align-items:center;gap:2px}
+.nav-btn{
+  background:none;border:none;cursor:pointer;padding:7px 13px;border-radius:8px;
+  font-family:'Cabinet Grotesk',sans-serif;font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.7);transition:all .2s;
+}
+.nav-btn:hover,.nav-btn.active{color:var(--teal);background:var(--teal-ll)}#nav.solid .nav-btn{color:var(--muted)}#nav.solid .nav-btn:hover,#nav.solid .nav-btn.active{color:var(--teal);background:var(--teal-ll)}
+
+/* ══ HERO ══ */
+#hero{
+  min-height:100vh;
+  background:linear-gradient(145deg,var(--navy) 0%,#152340 55%,#0d1c35 100%);
+  display:flex;align-items:flex-start;overflow:hidden;padding-top:68px;
+}
+.hero-mesh{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 70% 40%,rgba(30,58,138,.35),transparent),
+    radial-gradient(ellipse 40% 40% at 20% 70%,rgba(20,184,166,.12),transparent),
+    radial-gradient(ellipse 30% 30% at 85% 80%,rgba(20,184,166,.07),transparent);
+}
+.hero-grid{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:64px 64px;
+}
+.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
+.hero-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.hero-pulse{width:9px;height:9px;border-radius:50%;background:var(--teal);animation:pulse 2.2s ease-in-out infinite}
+.hero-pulse-ring{position:absolute;width:9px;height:9px;border-radius:50%;border:2px solid var(--teal);animation:pulse 2.2s ease-in-out infinite;opacity:.4}
+.hero-eyebrow-text{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,.45);text-transform:uppercase}
+.hero-name{font-family:'DM Serif Display',serif;font-size:clamp(40px,5.5vw,68px);font-weight:400;line-height:1.08;color:#fff;margin-bottom:14px}
+.hero-name .teal{color:var(--teal)}
+.hero-typed-row{display:flex;align-items:center;gap:10px;height:36px;margin-bottom:22px}
+.hero-typed{font-family:'Cabinet Grotesk',sans-serif;font-size:17px;font-weight:600;color:rgba(255,255,255,.65)}
+.hero-cursor{width:2px;height:20px;background:var(--teal);animation:blink 1s step-end infinite}
+.hero-desc{font-size:15px;color:rgba(255,255,255,.48);line-height:1.82;max-width:470px;margin-bottom:34px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:44px}
+.hero-meta{display:flex;flex-direction:column;gap:10px}
+.hero-meta-row{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.38)}
+.hero-meta-row strong{color:rgba(255,255,255,.7);font-weight:500}
+/* Photo */
+.hero-photo-wrap{display:flex;align-items:center;justify-content:center;position:relative}
+.hero-ring{position:absolute;border-radius:50%;border:1px solid rgba(20,184,166,.1);animation:spin linear infinite}
+.hero-blob{
+  width:300px;height:360px;
+  animation:blob 9s ease-in-out infinite;
+  overflow:hidden;
+  border:3px solid rgba(20,184,166,.35);
+  box-shadow:0 0 60px rgba(20,184,166,.1),0 30px 80px rgba(0,0,0,.45);
+  background:linear-gradient(135deg,var(--cobalt),#0d1c35);
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-blob img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.hero-float-badge{
+  position:absolute;
+  background:rgba(255,255,255,.09);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.15);border-radius:14px;
+  padding:10px 16px;animation:float 5s ease-in-out infinite;
+}
+.hfb-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:500;color:var(--teal)}
+.hfb-lbl{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;font-weight:500}
+.scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}
+.scroll-hint span{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.25)}
+.scroll-hint-line{width:1px;height:32px;background:linear-gradient(to bottom,rgba(20,184,166,.5),transparent);animation:float 2.5s ease-in-out infinite}
+
+/* ══ ABOUT ══ */
+#about{background:var(--surface)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.about-photo{border-radius:var(--r-xl);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-lg);aspect-ratio:4/5;background:linear-gradient(135deg,var(--cobalt-l),var(--teal-ll));display:flex;align-items:flex-end;justify-content:center;position:relative}
+.about-photo img{width:100%;height:100%;object-fit:cover;object-position:top center;position:absolute;inset:0}
+.about-photo-overlay{position:absolute;bottom:0;left:0;right:0;padding:20px 24px;background:linear-gradient(to top,rgba(15,23,42,.9),transparent)}
+.about-photo-name{font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+.about-photo-title{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px;font-weight:500}
+.about-domains{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:26px}
+.about-domain{display:flex;align-items:center;gap:10px;padding:11px 15px;border-radius:var(--r-sm);background:var(--bg);border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);transition:all .25s}
+.about-domain:hover{background:var(--teal-ll);border-color:rgba(20,184,166,.3);color:var(--teal)}
+.about-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.about-meta-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px}
+.ami-key{font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:3px}
+.ami-val{font-size:13px;font-weight:700;color:var(--text)}
+
+/* ══ STATS ══ */
+#stats{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--cobalt) 100%);
+  padding:72px 0;
+}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat-cell{text-align:center;padding:44px 20px;border-right:1px solid rgba(255,255,255,.08)}
+.stat-cell:last-child{border-right:none}
+.stat-icon-wrap{width:52px;height:52px;border-radius:14px;background:rgba(20,184,166,.15);border:1px solid rgba(20,184,166,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.stat-n{font-family:'DM Serif Display',serif;font-size:54px;font-weight:400;color:var(--teal);line-height:1;margin-bottom:8px}
+.stat-lbl{font-size:13px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:3px}
+.stat-sub{font-size:12px;color:rgba(255,255,255,.35);font-weight:500}
+
+/* ══ EDUCATION ══ */
+#education{background:var(--bg)}
+.tl{position:relative;padding-left:60px}
+.tl-spine{position:absolute;left:19px;top:10px;bottom:10px;width:2px;background:linear-gradient(to bottom,var(--teal),var(--cobalt),transparent);border-radius:1px}
+.tl-item{position:relative;margin-bottom:30px}
+.tl-item:last-child{margin-bottom:0}
+.tl-dot{position:absolute;left:-50px;top:10px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 0 0 5px var(--bg),0 0 0 7px rgba(20,184,166,.18)}
+.tl-year{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:500;color:var(--teal);background:var(--teal-ll);border:1px solid rgba(20,184,166,.22);padding:3px 11px;border-radius:20px;margin-bottom:10px}
+
+/* ══ SKILLS ══ */
+#skills{background:var(--surface)}
+.skills-split{display:grid;grid-template-columns:1fr 1.1fr;gap:72px;align-items:start}
+.skill-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:28px}
+.skill-tab{padding:8px 18px;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid;transition:all .2s;font-family:'Cabinet Grotesk',sans-serif}
+.skill-tab.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.skill-tab.off{background:transparent;color:var(--muted);border-color:var(--border)}
+.skill-tab.off:hover{border-color:var(--teal);color:var(--teal)}
+.skill-row{margin-bottom:18px}
+.skill-head{display:flex;justify-content:space-between;margin-bottom:7px;font-size:13px;font-weight:600;color:var(--text)}
+.skill-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)}
+.skill-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.skill-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--cobalt));transform-origin:left;transform:scaleX(0);transition:transform 1.1s cubic-bezier(.4,0,.2,1)}
+.skill-fill.on{transform:scaleX(1)}
+
+/* ══ TOOLS ══ */
+#tools{background:var(--bg)}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px}
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:24px 16px;text-align:center;box-shadow:var(--shadow-xs);transition:all .3s;cursor:default}
+.tool-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:rgba(20,184,166,.3)}
+.tool-card:hover .tool-icon-wrap{background:var(--teal);border-color:var(--teal)}
+.tool-icon-wrap{width:44px;height:44px;border-radius:12px;background:var(--cobalt-l);border:1px solid rgba(30,58,138,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:all .3s}
+.tool-name{font-family:'Cabinet Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.tool-cat{font-size:10.5px;color:var(--muted);font-weight:500}
+
+/* ══ RESEARCH ══ */
+#research{background:var(--surface)}
+.research-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .35s}
+.rc:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:rgba(20,184,166,.3)}
+.rc-head{padding:28px;background:linear-gradient(145deg,var(--navy),#1a3060);position:relative;overflow:hidden}
+.rc-head-glow{position:absolute;bottom:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,166,.15),transparent)}
+.rc-body{padding:24px}
+.rc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.rc-metric{background:var(--bg);border-radius:10px;padding:12px 14px;border:1px solid var(--border)}
+.rc-mval{font-family:'DM Serif Display',serif;font-size:21px;color:var(--teal);line-height:1}
+.rc-mdesc{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
+.rc-methods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.rc-conclusion{background:var(--bg);border-radius:10px;padding:13px 15px;border:1px solid var(--border)}
+.rc-concl-title{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:5px;font-family:'JetBrains Mono',monospace}
+.pdf-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:30px;font-size:12px;font-weight:700;border:1.5px solid rgba(20,184,166,.35);color:var(--teal);background:var(--teal-ll);cursor:pointer;margin-top:12px;transition:all .2s;font-family:'Cabinet Grotesk',sans-serif;text-decoration:none}
+.pdf-btn:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+/* ══ CERTIFICATIONS ══ */
+#certifications{background:var(--bg)}
+.certs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
+.cert-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px;box-shadow:var(--shadow-sm);transition:all .3s;position:relative;overflow:hidden}
+.cert-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.cert-top-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.cert-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.cert-logo-box{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cert-issuer{font-size:11.5px;font-weight:700;margin-bottom:3px}
+.cert-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);line-height:1.4}
+.cert-desc{font-size:13px;color:var(--muted);line-height:1.72;margin-bottom:14px}
+.cert-skills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.cert-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)}
+.cert-year{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.cert-stars{display:flex;gap:2px}
+
+/* ══ ATTESTATIONS ══ */
+#attestations{background:var(--surface)}
+.attest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.attest-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:30px;text-align:center;box-shadow:var(--shadow-xs);transition:all .3s}
+.attest-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:rgba(20,184,166,.3)}
+.attest-icon-ring{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.attest-issuer{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.attest-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:10px;line-height:1.4}
+.attest-desc{font-size:13px;color:var(--muted);line-height:1.72;margin-bottom:14px}
+.attest-skills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+
+/* ══ SERVICES ══ */
+#services{background:var(--bg)}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.srv{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;box-shadow:var(--shadow-xs);transition:all .3s}
+.srv:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:rgba(20,184,166,.3)}
+.srv:hover .srv-icon{background:linear-gradient(135deg,var(--teal),var(--cobalt))}
+.srv-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--teal-ll),var(--cobalt-l));display:flex;align-items:center;justify-content:center;margin-bottom:18px;transition:all .3s}
+.srv-title{font-family:'DM Serif Display',serif;font-size:17px;color:var(--navy);margin-bottom:8px}
+.srv-desc{font-size:13px;color:var(--muted);line-height:1.72}
+
+/* ══ INTERESTS ══ */
+#interests{background:var(--surface)}
+.interests-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.int-card{display:flex;align-items:center;gap:12px;padding:15px 18px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--border);transition:all .25s}
+.int-card:hover{background:var(--teal-ll);border-color:rgba(20,184,166,.3);transform:translateY(-2px)}
+.int-card:hover .int-icon{background:var(--teal)}
+.int-icon{width:38px;height:38px;border-radius:10px;background:var(--cobalt-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .25s}
+.int-label{font-size:13px;font-weight:700;color:var(--text)}
+
+/* ══ CONTACT ══ */
+#contact{background:var(--bg)}
+.contact-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:64px;align-items:flex-start}
+.contact-info-item{display:flex;align-items:flex-start;gap:16px;margin-bottom:22px}
+.ci-icon{width:44px;height:44px;border-radius:12px;background:var(--teal-ll);border:1px solid rgba(20,184,166,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ci-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:3px}
+.ci-val{font-size:14px;font-weight:700;color:var(--text);text-decoration:none;transition:color .2s}
+.ci-val:hover{color:var(--teal)}
+.socials{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.social-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:12px;font-weight:700;background:var(--surface);border:1px solid var(--border);color:var(--text);text-decoration:none;transition:all .2s;cursor:pointer}
+.social-btn:hover{background:var(--teal-ll);border-color:rgba(20,184,166,.3);color:var(--teal)}
+.availability-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px 22px;margin-top:28px;display:flex;align-items:flex-start;gap:14px}
+.avail-dot{width:10px;height:10px;border-radius:50%;background:#22C55E;animation:pulse 2s infinite;margin-top:2px;flex-shrink:0}
+.form-card{background:var(--surface);border-radius:var(--r-xl);padding:36px;box-shadow:var(--shadow-md);border:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{margin-bottom:14px}
+.f-label{font-size:11.5px;font-weight:800;color:var(--text);letter-spacing:.4px;text-transform:uppercase;display:block;margin-bottom:7px;font-family:'JetBrains Mono',monospace}
+.f-input{
+  width:100%;padding:12px 15px;border-radius:var(--r-sm);
+  border:1.5px solid var(--border);background:var(--bg);
+  font-family:'Cabinet Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text);
+  outline:none;transition:border-color .2s,background .2s;
+}
+.f-input::placeholder{color:var(--muted-l)}
+.f-input:focus{border-color:var(--teal);background:var(--surface)}
+textarea.f-input{resize:vertical;min-height:115px}
+
+/* ══ FOOTER ══ */
+footer{background:var(--navy);padding:48px 0}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.footer-brand-name{font-family:'DM Serif Display',serif;font-size:18px;color:#fff;margin-bottom:3px}
+.footer-brand-tag{font-size:11px;color:rgba(255,255,255,.35);font-weight:500}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.3);font-weight:500}
+.footer-icons{display:flex;gap:10px}
+.f-icon-btn{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;text-decoration:none}
+.f-icon-btn:hover{background:var(--teal);border-color:var(--teal)}
+.footer-nav{border-top:1px solid rgba(255,255,255,.07);margin-top:24px;padding-top:20px;display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
+.f-nav-btn{background:none;border:none;cursor:pointer;font-size:12px;color:rgba(255,255,255,.28);font-family:'Cabinet Grotesk',sans-serif;font-weight:500;transition:color .2s}
+.f-nav-btn:hover{color:var(--teal)}
+
+/* ── Responsive ── */
+
+
+
+
+/* ── Gradient text animation ── */
+.gradient-text{background:linear-gradient(135deg,var(--teal) 0%,#2DD4BF 40%,#5EEAD4 70%,var(--teal) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradFlow 4s ease-in-out infinite}
+
+/* ── Section separators ── */
+section::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.25}
+section:last-of-type::after,#stats::after,#hero::after,#contact::after,footer::after{display:none}
+
+/* ── Button shine effect ── */
+.btn-teal,.btn-navy{position:relative;overflow:hidden}
+.btn-teal::after,.btn-navy::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%);transition:transform .5s ease}
+.btn-teal:hover::after,.btn-navy:hover::after{transform:translateX(100%)}
+
+/* ── Smooth card transitions ── */
+.card,.srv,.tool-card,.cert-card,.attest-card,.int-card,.rc{transition:all .35s cubic-bezier(.4,0,.2,1)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--teal),var(--cobalt));border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--teal-d)}
+
+/* ── Scroll padding for fixed navbar ── */
+html{scroll-padding-top:80px}
+
+/* ── Accent underline ── */
+.s-title .accent{position:relative;display:inline-block}
+.s-title .accent::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--teal);border-radius:1px;opacity:.35}
+.hero-name .gradient-text::after{display:none}
+
+/* ── Hero particles ── */
+.hero-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.hero-particle{position:absolute;width:4px;height:4px;background:rgba(20,184,166,.3);border-radius:50%;animation:particleFloat linear infinite}
+.hero-particle:nth-child(1){left:10%;top:20%;width:6px;height:6px;animation-duration:14s;animation-delay:0s}
+.hero-particle:nth-child(2){left:25%;top:60%;width:3px;height:3px;animation-duration:18s;animation-delay:1s}
+.hero-particle:nth-child(3){left:45%;top:15%;width:5px;height:5px;animation-duration:12s;animation-delay:2s}
+.hero-particle:nth-child(4){left:65%;top:70%;width:4px;height:4px;animation-duration:16s;animation-delay:.5s}
+.hero-particle:nth-child(5){left:80%;top:30%;width:7px;height:7px;animation-duration:20s;animation-delay:3s}
+.hero-particle:nth-child(6){left:90%;top:80%;width:3px;height:3px;animation-duration:13s;animation-delay:1.5s}
+.hero-particle:nth-child(7){left:15%;top:85%;width:5px;height:5px;animation-duration:17s;animation-delay:2.5s}
+.hero-particle:nth-child(8){left:55%;top:45%;width:4px;height:4px;animation-duration:15s;animation-delay:.8s}
+.hero-particle:nth-child(9){left:35%;top:40%;width:6px;height:6px;animation-duration:19s;animation-delay:1.2s}
+.hero-particle:nth-child(10){left:70%;top:25%;width:5px;height:5px;animation-duration:11s;animation-delay:3.5s}
+@keyframes particleFloat{0%{transform:translateY(0) translateX(0) scale(1);opacity:0}20%{opacity:.8}80%{opacity:.8}100%{transform:translateY(-100vh) translateX(50px) scale(0);opacity:0}}
+
+/* ── 3D Tilt for service cards ── */
+.srv{transform-style:preserve-3d;perspective:800px}
+.srv:hover{transform:perspective(800px) rotateX(2deg) rotateY(4deg) scale(1.02)}
+
+/* ── Animated border gradient for cert cards ── */
+.cert-card{position:relative}
+.cert-card::before{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;border-radius:calc(var(--r-lg) + 2px);background:linear-gradient(45deg,var(--teal),var(--cobalt),var(--teal),var(--gold, #FBBF24));background-size:400% 400%;z-index:-1;opacity:0;transition:opacity .4s ease}
+.cert-card:hover::before{opacity:1;animation:borderSpin 3s ease infinite}
+@keyframes borderSpin{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* ── Shimmer on tool cards ── */
+.tool-card{position:relative;overflow:hidden}
+.tool-card::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(20,184,166,.06) 50%,transparent 70%);background-size:200% 100%;opacity:0;transition:opacity .4s}
+.tool-card:hover::after{opacity:1;animation:shimmer 1.8s ease infinite}
+
+/* ── Stat cells radial glow ── */
+.stat-cell{position:relative;overflow:hidden}
+.stat-cell::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(20,184,166,.06),transparent 70%);pointer-events:none}
+
+/* ── Touch devices: disable hover effects ── */
+@media(hover:none){
+  .card:hover,.tool-card:hover,.cert-card:hover,.attest-card:hover,.int-card:hover,.srv:hover,.rc:hover{transform:none!important}
+  .btn-teal:hover,.btn-navy:hover,.btn-ghost:hover,.btn-white:hover{transform:none!important}
+  .about-domain:hover,.social-btn:hover{background:var(--bg);color:var(--text);border-color:var(--border)}
+  .cert-card:hover::before,.tool-card:hover::after{opacity:0;animation:none}
+  .srv:hover{transform:none}
+}
+
+/* ── hero-typed-row responsive ── */
+.hero-typed-row{display:flex;align-items:flex-start;gap:8px;min-height:36px;margin-bottom:22px}
+.hero-typed{font-family:'Cabinet Grotesk',sans-serif;font-size:17px;font-weight:600;color:rgba(255,255,255,.65);line-height:1.5}
+
+/* ── Overflow protection ── */
+body{overflow-x:hidden}
+
+/* ── Responsive breakpoints ── */
+
+/* ── Hamburger menu base ── */
+.nav-hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;position:relative;z-index:310}
+.hamb-line,.hamb-line::before,.hamb-line::after{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all .3s ease;position:relative}
+.hamb-line::before,.hamb-line::after{content:'';position:absolute;left:0}
+.hamb-line::before{top:-7px}.hamb-line::after{top:7px}
+.hamb-line.open{background:transparent}
+.hamb-line.open::before{top:0;transform:rotate(45deg);background:#fff}
+.hamb-line.open::after{top:0;transform:rotate(-45deg);background:#fff}
+.nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:295;display:none}
+#nav.solid .hamb-line,#nav.solid .hamb-line::before,#nav.solid .hamb-line::after{background:var(--navy)}
+#nav.solid .hamb-line.open{background:transparent}
+#nav.solid .hamb-line.open::before,#nav.solid .hamb-line.open::after{background:var(--navy)}
+.nav-mobile-cta{display:none}
+.nav-desktop-cta{display:inline-flex}
+@media(max-width:1024px){
+  .tools-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:900px){
+  .hero-inner,.about-grid,.contact-grid{grid-template-columns:1fr}
+  .hero-photo-wrap{display:none}
+  .hero-float-badge{display:none}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .research-grid,.services-grid{grid-template-columns:1fr}
+  .attest-grid{grid-template-columns:repeat(2,1fr)}
+  .form-row{grid-template-columns:1fr}
+  .skills-split{grid-template-columns:1fr}
+  .hero-btns{flex-direction:column;align-items:flex-start}
+  .hero-name{font-size:clamp(34px,6vw,50px)}
+}
+@media(max-width:768px){
+  #hero{padding-top:74px}
+  section{padding:60px 0}
+  .wrap{padding:0 24px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:12px}
+  .stat-cell{padding:32px 16px}
+  .stat-n{font-size:42px}
+  .tools-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .cert-card{padding:22px}
+  .attest-grid{grid-template-columns:1fr}
+  .attest-card,.srv{padding:22px}
+  .hero-inner{gap:48px}
+  .hero-name{font-size:clamp(30px,5.5vw,40px)}
+  .s-title{font-size:clamp(24px,5vw,30px)}
+  .s-desc{font-size:14px}
+  .btn{padding:10px 22px;font-size:13px}
+  .nav-desktop-cta{display:none}
+  .nav-mobile-cta{display:inline-flex}
+  .nav-hamburger{display:block}
+  .nav-links{position:fixed;top:0;right:-100%;width:300px;height:100vh;background:var(--surface);flex-direction:column;padding:80px 28px 28px;gap:8px;transition:right .35s cubic-bezier(.22,1,.36,1);z-index:300;box-shadow:-8px 0 32px rgba(0,0,0,.1)}
+  #nav.menu-open .nav-links{right:0}
+  .nav-btn{color:var(--text);font-size:16px;padding:14px 18px;width:100%;text-align:left;border-radius:12px}
+  .nav-btn.active{background:var(--teal-ll);color:var(--teal)!important}
+  .nav-hamburger{z-index:310}
+}
+@media(max-width:600px){
+  #hero{padding-top:68px}
+  section{padding:48px 0}
+  .wrap{padding:0 18px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:10px}
+  .stat-cell{padding:24px 12px}
+  .stat-n{font-size:36px}
+  .tools-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .certs-grid{grid-template-columns:1fr}
+  .hero-name{font-size:clamp(26px,7vw,34px)}
+  .hero-typed{font-size:15px}
+  .hero-desc{font-size:14px}
+  .hero-btns{gap:8px;margin-bottom:28px}
+  .about-meta-grid{grid-template-columns:1fr}
+  .btn{padding:9px 18px;font-size:13px}
+  .tl{padding-left:32px}
+  .tl-dot{width:34px;height:34px;left:-40px}
+  .interests-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .footer-inner{flex-direction:column;text-align:center;gap:16px}
+}
+@media(max-width:480px){
+  section{padding:40px 0}
+  .wrap{padding:0 14px}
+  .stat-cell{padding:20px 8px}
+  .stat-n{font-size:30px}
+  .stat-lbl{font-size:11px}
+  .stat-sub{font-size:10px}
+  .tools-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .tool-card{padding:14px 10px}
+  .cert-card{padding:18px}
+  .s-title{font-size:clamp(20px,5.5vw,24px)}
+  .hero-name{font-size:clamp(24px,6.5vw,30px)}
+  .hero-typed{font-size:14px}
+  .hero-desc{font-size:13px}
+  .hero-btns{gap:6px}
+  .btn{padding:8px 16px;font-size:12px}
+}
+@media(max-width:380px){
+  .wrap{padding:0 12px}
+  section{padding:32px 0}
+  .stat-cell{padding:16px 6px}
+  .stat-n{font-size:26px}
+  .tools-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .tool-card{padding:12px 8px}
+  .hero-name{font-size:clamp(20px,6vw,26px)}
+  .hero-typed{font-size:13px}
+  .hero-btns{gap:4px}
+  .btn{padding:7px 12px;font-size:11px}
+}
+`}</style>
+);
+
+/* ─────────────────────────────────────────────────────
+   HOOKS
+───────────────────────────────────────────────────── */
+const useInView = (threshold = 0.12) => {
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVis(true); io.disconnect(); } },
+      { threshold }
+    );
+    if (ref.current) io.observe(ref.current);
+    return () => io.disconnect();
+  }, [threshold]);
+  return [ref, vis];
+};
+
+const useCounter = (target, active, ms = 1400) => {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let cur = 0; const step = target / (ms / 16);
+    const id = setInterval(() => {
+      cur += step;
+      if (cur >= target) { setN(target); clearInterval(id); }
+      else setN(Math.floor(cur));
+    }, 16);
+    return () => clearInterval(id);
+  }, [target, active, ms]);
+  return n;
+};
+
+/* ─────────────────────────────────────────────────────
+   NAV ITEMS
+───────────────────────────────────────────────────── */
+const NAV = [
+  ["Accueil","hero"],["À Propos","about"],["Formation","education"],
+  ["Compétences","skills"],["Outils","tools"],["Recherches","research"],
+  ["Certifications","certifications"],["Services","services"],["Contact","contact"],
+];
+const go = id => document.getElementById(id)?.scrollIntoView({ behavior:"smooth" });
+
+/* ─────────────────────────────────────────────────────
+   TYPED STRING HOOK
+───────────────────────────────────────────────────── */
+const TYPED_WORDS = [
+  "Économètre statisticien junior | Data Analyst Chercheur en économie appliquée",
+  "Analyse de données",
+  "Conception de questionnaires d'enquête",
+  "Collecte, nettoyage et traitement des données",
+  "Modélisation économique",
+  "Séries temporelles (ARDL, ECM, VECM, VAR, ARMA, AR, MA, ARIMA)",
+  "Analyse de données de panel (effet fixe, aléatoire et panel dynamique)",
+  "Visualisation et interprétation",
+  "Inclusion financière, pauvreté et inégalités de revenus",
+  "Rédaction de rapports d'études et de recherche",
+];
+const useTyped = () => {
+  const [word, setWord] = useState("");
+  const [wi, setWi] = useState(0);
+  const [ci, setCi] = useState(0);
+  const [del, setDel] = useState(false);
+  const pauseRef = useRef(null);
+  useEffect(() => {
+    const speed = del ? 40 : 80;
+    const t = setTimeout(() => {
+      const w = TYPED_WORDS[wi];
+      if (!del) {
+        if (ci < w.length) { setWord(w.slice(0, ci+1)); setCi(c=>c+1); }
+        else { pauseRef.current = setTimeout(() => setDel(true), 2000); }
+      } else {
+        if (ci > 0) { setWord(w.slice(0, ci-1)); setCi(c=>c-1); }
+        else { setDel(false); setWi(i=>(i+1)%TYPED_WORDS.length); }
+      }
+    }, speed);
+    return () => { clearTimeout(t); if (pauseRef.current) clearTimeout(pauseRef.current); };
+  }, [word, wi, ci, del]);
+  return word;
+};
+
+/* ─────────────────────────────────────────────────────
+   TOOL ICONS MAP
+───────────────────────────────────────────────────── */
+const TOOL_ICONS = {
+  "Stata":     { icon:"barChart",  color:"#1E3A8A" },
+  "EViews":    { icon:"activity",  color:"#0F766E" },
+  "R":         { icon:"chart",     color:"#276DC3" },
+  "RStudio":   { icon:"code",      color:"#75AADB" },
+  "Python":    { icon:"cpu",       color:"#306998" },
+  "Excel":     { icon:"pieChart",  color:"#217346" },
+  "CsPro":     { icon:"database",  color:"#64748B" },
+  "Stata GMM": { icon:"settings",  color:"#1E3A8A" },
+};
+const INTEREST_ICONS = {
+  "Agriculture & Développement": "leaf",
+  "Inclusion Financière":         "users",
+  "Cryptomonnaies & Blockchain":  "bitcoin",
+  "Innovation Sociale":           "zap",
+  "Économie du Développement":    "globe",
+  "Économie Comportementale":     "target",
+  "Technologies Émergentes":      "cpu",
+  "Travail en Équipe":            "users",
+};
+const SERVICE_ICONS = ["chart","barChart","database","book","trendingUp","fileText"];
+const EDU_ICONS = ["graduation","microscope","briefcase"];
+
+/* ─────────────────────────────────────────────────────
+   SECTION 1 — NAV
+───────────────────────────────────────────────────── */
+const Nav = () => {
+  const [solid, setSolid] = useState(false);
+  const [active, setActive] = useState("hero");
+  useEffect(() => {
+    const fn = () => {
+      setSolid(window.scrollY > 60);
+      const pos = window.scrollY + 130;
+      let cur = "hero";
+      NAV.forEach(([,id]) => {
+        const el = document.getElementById(id);
+        if (el && el.offsetTop <= pos) cur = id;
+      });
+      setActive(cur);
+    };
+    window.addEventListener("scroll", fn, { passive:true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleNavClick = (id) => {
+    setMenuOpen(false);
+    go(id);
+  };
+  return (
+    <nav id="nav" className={`${solid ? "solid" : ""}${menuOpen ? " menu-open" : ""}`}>
+      <div className="nav-inner">
+        <div className="nav-brand" onClick={() => go("hero")}>
+          <div className="nav-mark">VA</div>
+          <div>
+            <div className="nav-name">Vincent ASSOGBA</div>
+            <div className="nav-sub">Économètre · Data Analyst</div>
+          </div>
+        </div>
+        <div className="nav-links">
+          {NAV.slice(0,7).map(([label,id]) => (
+            <button key={id} className={`nav-btn${active===id?" active":""}`} onClick={() => handleNavClick(id)}>{label}</button>
+          ))}
+          <button className="btn btn-teal nav-mobile-cta" style={{fontSize:13,padding:"9px 20px"}} onClick={() => handleNavClick("contact")}>
+            <Icon name="mail" size={15} color="#fff"/> Me contacter
+          </button>
+        </div>
+        <button className="btn btn-teal nav-desktop-cta" style={{fontSize:13,padding:"9px 20px"}} onClick={() => go("contact")}>
+          <Icon name="mail" size={15} color="#fff"/> Me contacter
+        </button>
+        <button className="nav-hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+          <span className={`hamb-line${menuOpen?" open":""}`}/>
+        </button>
+        {menuOpen && <div className="nav-overlay" onClick={() => setMenuOpen(false)}/>}
+      </div>
+    </nav>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 1 — HERO
+───────────────────────────────────────────────────── */
+const Hero = () => {
+  const typed = useTyped();
+  const [viewPdf, setViewPdf] = useState(null);
+  return (
+    <section id="hero">
+      <div className="hero-mesh"/>
+      <div className="hero-grid"/>
+      <div className="hero-particles">
+        <div className="hero-particle"/><div className="hero-particle"/><div className="hero-particle"/>
+        <div className="hero-particle"/><div className="hero-particle"/><div className="hero-particle"/>
+        <div className="hero-particle"/><div className="hero-particle"/><div className="hero-particle"/>
+        <div className="hero-particle"/>
+      </div>
+      <div className="wrap">
+        <div className="hero-inner">
+
+          {/* Left */}
+          <div>
+            <div className="hero-eyebrow" style={{animation:"fadeUp .6s ease both"}}>
+              <div style={{position:"relative",width:9,height:9}}>
+                <div className="hero-pulse-ring"/>
+                <div className="hero-pulse"/>
+              </div>
+              <span className="hero-eyebrow-text">Disponible · Abomey-Calavi, Bénin · 2026</span>
+            </div>
+
+            <h1 className="hero-name" style={{animation:"fadeUp .65s .1s ease both"}}>
+              Adéchinan<br/>
+              <span className="gradient-text">Vincent</span><br/>
+              ASSOGBA
+            </h1>
+
+            <div className="hero-typed-row" style={{animation:"fadeUp .65s .2s ease both"}}>
+              <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:500,letterSpacing:1.5,color:"rgba(255,255,255,.35)",textTransform:"uppercase",whiteSpace:"nowrap"}}>Spécialiste en :</span>
+              <span className="hero-typed">{typed}</span>
+              <span className="hero-cursor"/>
+            </div>
+
+            <p className="hero-desc" style={{animation:"fadeUp .65s .3s ease both"}}>
+              {PROFILE.tagline}
+            </p>
+
+            {/* 3 CTA buttons from cahier des charges §4 */}
+            <div className="hero-btns" style={{animation:"fadeUp .65s .4s ease both"}}>
+              <button className="btn btn-teal" onClick={() => setViewPdf(ASSETS.cv)}>
+                <Icon name="fileText" size={16} color="#fff"/> Voir le CV
+              </button>
+              {viewPdf && (
+                <PdfViewer pdfUrl={viewPdf} fileName="CV_Vincent_ASSOGBA.pdf" onClose={() => setViewPdf(null)} />
+              )}
+              <button className="btn btn-white" onClick={() => go("research")}>
+                <Icon name="chart" size={16} color="rgba(255,255,255,.8)"/> Voir mes recherches
+              </button>
+              <button className="btn btn-ghost" style={{color:"rgba(255,255,255,.7)",borderColor:"rgba(255,255,255,.18)"}} onClick={() => go("contact")}>
+                <Icon name="mail" size={16} color="rgba(255,255,255,.7)"/> Me contacter
+              </button>
+            </div>
+
+            <div className="hero-meta" style={{animation:"fadeUp .65s .5s ease both"}}>
+              {[
+                {icon:"phone",    val:PROFILE.phone},
+                {icon:"mail",     val:PROFILE.email},
+                {icon:"mapPin",   val:PROFILE.address},
+              ].map(m => (
+                <div key={m.icon} className="hero-meta-row">
+                  <Icon name={m.icon} size={14} color="rgba(255,255,255,.3)"/>
+                  <strong>{m.val}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — Photo */}
+          <div className="hero-photo-wrap" style={{animation:"zoomIn .8s .3s ease both"}}>
+            <div className="hero-ring" style={{width:400,height:400,animationDuration:"28s"}}/>
+            <div className="hero-ring" style={{width:490,height:490,animationDuration:"18s",animationDirection:"reverse",borderColor:"rgba(30,58,138,.1)"}}/>
+
+            <div className="hero-blob">
+              <img src={ASSETS.photo} alt="Vincent ASSOGBA — Économètre"/>
+            </div>
+
+            <div className="hero-float-badge" style={{bottom:"56px",right:"-32px",animationDelay:"0s"}}>
+              <div className="hfb-val">R² = 0.930</div>
+              <div className="hfb-lbl">Modèle ARDL</div>
+            </div>
+            <div className="hero-float-badge" style={{top:"56px",left:"-28px",animationDelay:"1.2s"}}>
+              <div className="hfb-val" style={{color:"#FBBF24"}}>F = 9.594</div>
+              <div className="hfb-lbl">Fisher statistic</div>
+            </div>
+            <div className="hero-float-badge" style={{top:"38%",right:"-40px",animationDelay:".6s"}}>
+              <div className="hfb-val" style={{color:"#A78BFA"}}>5+</div>
+              <div className="hfb-lbl">Certifications</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="scroll-hint" onClick={() => go("about")}>
+        <span>Scroll</span>
+        <div className="scroll-hint-line"/>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 2 — À PROPOS
+───────────────────────────────────────────────────── */
+const DOMAINS = [
+  {icon:"barChart", label:"Économétrie"},
+  {icon:"database", label:"Analyse de données"},
+  {icon:"globe",    label:"Développement économique"},
+  {icon:"users",    label:"Inclusion financière"},
+  {icon:"search",   label:"Recherche économique"},
+  {icon:"layers",   label:"Politiques publiques"},
+];
+
+const About = () => {
+  const [ref,vis] = useInView();
+  return (
+    <section id="about">
+      <div className="wrap" ref={ref}>
+        <div className="about-grid">
+          {/* Photo */}
+          <div className={`reveal zoom${vis?" vis":""} d1`}>
+            <div className="about-photo">
+              <img src={ASSETS.photo} alt="Adéchinan Vincent ASSOGBA"/>
+              <div className="about-photo-overlay">
+                <div className="about-photo-name">Adéchinan Vincent ASSOGBA</div>
+                <div className="about-photo-title">Économètre Junior · UAC Bénin · 2026</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Text */}
+          <div className={`reveal right${vis?" vis":""} d2`}>
+            <div className="eyebrow"><div className="eyebrow-line"/>À Propos de moi</div>
+            <h2 className="s-title">Analyser les données,<br/><span className="accent">éclairer les décisions</span></h2>
+            <p className="s-desc" style={{marginBottom:16}}>
+              Économètre junior titulaire d'une <strong>double licence</strong> en Statistique-Économétrie et Science de la Vie et de la Terre. Maîtrise avancée de Stata, EViews et R.
+            </p>
+            <p className="s-desc">
+              Rigoureux et orienté solutions basées sur les données, je mets mes compétences au service des institutions — <strong>BCEAO, Banque Mondiale, PNUD, AFD</strong>.
+            </p>
+
+            <div className="about-domains">
+              {DOMAINS.map(d => (
+                <div key={d.label} className="about-domain">
+                  <Icon name={d.icon} size={16} color="var(--teal)"/>
+                  {d.label}
+                </div>
+              ))}
+            </div>
+
+            <div className="about-meta-grid">
+              {[
+                {k:"Université",    v:"UAC — Abomey-Calavi"},
+                {k:"Filière",       v:"Économétrie & Stats"},
+                {k:"Langues",       v:"Français · Anglais · Nagot"},
+                {k:"Disponibilité", v:"Immédiate"},
+              ].map(item => (
+                <div key={item.k} className="about-meta-item">
+                  <div className="ami-key">{item.k}</div>
+                  <div className="ami-val">{item.v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 3 — STATISTIQUES ANIMÉES
+───────────────────────────────────────────────────── */
+const StatCell = ({ n, label, sub, iconName, active }) => {
+  const val = useCounter(n, active);
+  return (
+    <div className="stat-cell">
+      <div className="stat-icon-wrap">
+        <Icon name={iconName} size={22} color="var(--teal)"/>
+      </div>
+      <div className="stat-n">{val}+</div>
+      <div className="stat-lbl">{label}</div>
+      <div className="stat-sub">{sub}</div>
+    </div>
+  );
+};
+
+const STAT_ICONS = ["graduation","award","fileText","cpu"];
+
+const Stats = () => {
+  const [ref,vis] = useInView(0.3);
+  return (
+    <section id="stats" style={{padding:"72px 0"}}>
+      <div className="wrap" ref={ref}>
+        <div className="stats-row">
+          {STATS.map((s,i) => (
+            <div key={i} className={`reveal up${vis?" vis":""}`} style={{animationDelay:`${i*0.12}s`}}>
+              <StatCell n={s.n} label={s.label} sub={s.sub} iconName={STAT_ICONS[i]} active={vis}/>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 4 — FORMATION ACADÉMIQUE
+───────────────────────────────────────────────────── */
+const Education = () => {
+  const [ref,vis] = useInView();
+  const EDU_COLORS = ["#F59E0B","#059669","#1E3A8A"];
+  return (
+    <section id="education">
+      <div className="wrap">
+        <div className={`reveal up${vis?" vis":""}`} ref={ref} style={{marginBottom:52}}>
+          <div className="eyebrow"><div className="eyebrow-line"/>Parcours académique</div>
+          <h2 className="s-title">Formation <span className="cobalt">Académique</span></h2>
+          <p className="s-desc">Double licence en sciences quantitatives et biologiques, forgeant une vision analytique transversale.</p>
+        </div>
+
+        <div className="tl">
+          <div className="tl-spine"/>
+          {EDUCATION.map((e,i) => (
+            <div key={i} className={`tl-item reveal up${vis?" vis":""}`} style={{animationDelay:`${.15+i*.18}s`}}>
+              <div className="tl-dot" style={{background:`linear-gradient(135deg,${e.color},${e.color}88)`}}>
+                <Icon name={EDU_ICONS[i]} size={18} color="#fff"/>
+              </div>
+              <div className="card" style={{padding:24}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:12}}>
+                  <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:19,color:"var(--navy)",lineHeight:1.3,fontWeight:400}}>{e.title}</h3>
+                  <span className="tl-year">{e.year}</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:7,color:"var(--teal)",fontSize:13,fontWeight:700,marginBottom:10}}>
+                  <Icon name="mapPin" size={14} color="var(--teal)"/>
+                  {e.school}
+                </div>
+                <p style={{fontSize:13.5,color:"var(--muted)",lineHeight:1.75,marginBottom:14}}>{e.desc}</p>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {e.tags.map(t=><span key={t} className="tag tag-blue">{t}</span>)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 5 — COMPÉTENCES
+───────────────────────────────────────────────────── */
+const SKILL_TABS = [
+  {label:"Économétrie",         icon:"barChart", data:SKILLS.econometrie},
+  {label:"Statistiques",        icon:"activity", data:SKILLS.statistiques},
+  {label:"Gestion des données", icon:"database", data:SKILLS.donnees},
+];
+
+const SkillBar = ({ name, pct, active, delay }) => {
+  const fillRef = useRef(null);
+  useEffect(() => {
+    if (active && fillRef.current) {
+      const id = setTimeout(() => fillRef.current?.classList.add("on"), delay*1000+350);
+      return () => clearTimeout(id);
+    } else fillRef.current?.classList.remove("on");
+  }, [active, delay]);
+  return (
+    <div className="skill-row">
+      <div className="skill-head">
+        <span>{name}</span>
+        <span className="skill-pct">{pct}%</span>
+      </div>
+      <div className="skill-track">
+        <div ref={fillRef} className="skill-fill" style={{width:`${pct}%`}}/>
+      </div>
+    </div>
+  );
+};
+
+const Skills = () => {
+  const [ref,vis] = useInView();
+  const [tab,setTab] = useState(0);
+  return (
+    <section id="skills">
+      <div className="wrap" ref={ref}>
+        <div className="skills-split">
+          <div className={`reveal left${vis?" vis":""}`}>
+            <div className="eyebrow"><div className="eyebrow-line"/>Compétences techniques</div>
+            <h2 className="s-title">Expertise <span className="accent">Quantitative</span></h2>
+            <p className="s-desc">Maîtrise des méthodes économétriques modernes, des tests statistiques et des outils d'analyse de données.</p>
+            <div className="skill-tabs">
+              {SKILL_TABS.map((t,i)=>(
+                <button key={t.label} className={`skill-tab ${tab===i?"on":"off"}`} onClick={()=>setTab(i)}>
+                  <span style={{display:"flex",alignItems:"center",gap:6}}>
+                    <Icon name={t.icon} size={14} color={tab===i?"#fff":"var(--muted)"}/>
+                    {t.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={`reveal right${vis?" vis":""} d2`}>
+            <div className="card" style={{padding:28}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:22,fontFamily:"'DM Serif Display',serif",fontSize:17,color:"var(--navy)"}}>
+                <Icon name={SKILL_TABS[tab].icon} size={20} color="var(--teal)"/>
+                {SKILL_TABS[tab].label}
+              </div>
+              {SKILL_TABS[tab].data.map((s,i)=>(
+                <SkillBar key={s.name} name={s.name} pct={s.pct} active={vis} delay={i*0.1}/>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 6 — OUTILS & LOGICIELS
+───────────────────────────────────────────────────── */
+const Tools = () => {
+  const [ref,vis] = useInView();
+  return (
+    <section id="tools">
+      <div className="wrap" ref={ref}>
+        <div style={{textAlign:"center",marginBottom:52}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow" style={{justifyContent:"center"}}><div className="eyebrow-line"/>Logiciels</div>
+          <h2 className="s-title" style={{textAlign:"center"}}>Outils & <span className="accent">Logiciels</span></h2>
+          <p className="s-desc" style={{margin:"0 auto",textAlign:"center"}}>Environnements maîtrisés pour l'analyse économétrique, statistique et la gestion de données.</p>
+        </div>
+        <div className="tools-grid">
+          {TOOLS.map((t,i) => {
+            const conf = TOOL_ICONS[t.name] || {icon:"cpu",color:"var(--cobalt)"};
+            return (
+              <div key={t.name} className={`tool-card reveal up${vis?" vis":""}`} style={{animationDelay:`${i*0.07}s`}}>
+                <div className="tool-icon-wrap">
+                  <Icon name={conf.icon} size={22} color={conf.color}/>
+                </div>
+                <div className="tool-name">{t.name}</div>
+                <div className="tool-cat">{t.cat}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 7 — RECHERCHES & PUBLICATIONS
+───────────────────────────────────────────────────── */
+const Research = () => {
+  const [ref,vis] = useInView();
+  return (
+    <section id="research">
+      <div className="wrap" ref={ref}>
+        <div style={{marginBottom:52}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow"><div className="eyebrow-line"/>Travaux de recherche</div>
+          <h2 className="s-title">Recherches & <span className="accent">Publications</span></h2>
+          <p className="s-desc">Études économétriques appliquées à l'économie béninoise, mobilisant des méthodes rigoureuses et des données Banque Mondiale.</p>
+        </div>
+
+        <div className="research-grid">
+          {RESEARCH.map((r,i) => (
+            <div key={i} className={`rc reveal up${vis?" vis":""}`} style={{animationDelay:`${.1+i*.15}s`}}>
+              <div className="rc-head">
+                <div className="rc-head-glow"/>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,gap:10,flexWrap:"wrap"}}>
+                  <span className={i===0?"tag":"tag tag-blue"} style={{fontSize:11}}>{r.badge}</span>
+                  <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"rgba(255,255,255,.4)"}}>{r.year}</span>
+                </div>
+                <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:17,fontWeight:400,color:"#fff",lineHeight:1.45,marginBottom:10}}>{r.title}</h3>
+                <p style={{fontSize:13,color:"rgba(255,255,255,.5)",lineHeight:1.72}}>{r.abstract}</p>
+              </div>
+              <div className="rc-body">
+                <div className="rc-metrics">
+                  {r.metrics.map(m=>(
+                    <div key={m.desc} className="rc-metric">
+                      <div className="rc-mval">{m.val}</div>
+                      <div className="rc-mdesc">{m.desc}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rc-methods">
+                  {r.methods.map(m=><span key={m} className="tag tag-blue" style={{fontSize:10}}>{m}</span>)}
+                </div>
+                <div className="rc-conclusion">
+                  <div className="rc-concl-title">Résultats clés</div>
+                  <p style={{fontSize:13,color:"var(--text)",lineHeight:1.7}}>{r.conclusion}</p>
+                </div>
+                <a href={ASSETS.research[r.pdfKey]} download={`${r.pdfKey}.pdf`} className="pdf-btn">
+                  <Icon name="download" size={14} color="var(--teal)"/>
+                  Télécharger PDF
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 8 — CERTIFICATIONS
+───────────────────────────────────────────────────── */
+const Certifications = () => {
+  const [ref,vis] = useInView();
+  const CERT_BARS = [
+    "linear-gradient(90deg,#4285F4,#34A853)",
+    "linear-gradient(90deg,#0F9D58,#4285F4)",
+  ];
+  return (
+    <section id="certifications">
+      <div className="wrap" ref={ref}>
+        <div style={{marginBottom:52}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow"><div className="eyebrow-line"/>Certifications professionnelles</div>
+          <h2 className="s-title">Certifications <span className="cobalt">Internationales</span></h2>
+          <p className="s-desc">Certifications Google obtenues via Coursera — référence mondiale de formation professionnelle.</p>
+        </div>
+
+        <div className="certs-grid">
+          {CERTIFICATIONS.map((c,i) => (
+            <div key={i} className={`cert-card reveal up${vis?" vis":""}`} style={{animationDelay:`${.1+i*.12}s`}}>
+              <div className="cert-top-bar" style={{background:CERT_BARS[i]}}/>
+              <div className="cert-head">
+                <div className="cert-logo-box" style={{background:`${c.issuerColor}18`,border:`1px solid ${c.issuerColor}30`}}>
+                  <Icon name="award" size={24} color={c.issuerColor}/>
+                </div>
+                <div>
+                  <div className="cert-issuer" style={{color:c.issuerColor}}>{c.issuer}</div>
+                  <div className="cert-title">{c.title}</div>
+                </div>
+              </div>
+              <p className="cert-desc">{c.desc}</p>
+              <div className="cert-skills">
+                {c.skills.map(s=>(
+                  <span key={s} style={{padding:"3px 10px",borderRadius:12,fontSize:10.5,fontWeight:700,background:`${c.issuerColor}14`,color:c.issuerColor,border:`1px solid ${c.issuerColor}28`}}>{s}</span>
+                ))}
+              </div>
+              <div className="cert-foot">
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <Icon name="check" size={13} color="#22C55E"/>
+                  <span className="cert-year">Obtenu en {c.year}</span>
+                </div>
+                <div className="cert-stars">
+                  {[1,2,3,4,5].map(s=>(
+                    <svg key={s} width="13" height="13" viewBox="0 0 24 24" fill={s<=4?c.issuerColor:"var(--border)"} stroke="none">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 9 — ATTESTATIONS & FORMATIONS
+───────────────────────────────────────────────────── */
+const ATTEST_META = [
+  {iconName:"zap",   bgRing:"#FED7AA", bg:"#FFF7ED"},
+  {iconName:"leaf",  bgRing:"#BBF7D0", bg:"#F0FDF4"},
+  {iconName:"sun",   bgRing:"#A7F3D0", bg:"#F0FDF9"},
+];
+
+const Attestations = () => {
+  const [ref,vis] = useInView();
+  return (
+    <section id="attestations">
+      <div className="wrap" ref={ref}>
+        <div style={{marginBottom:52}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow"><div className="eyebrow-line"/>Attestations de formation</div>
+          <h2 className="s-title">Attestations & <span className="accent">Formations</span></h2>
+          <p className="s-desc">Formations spécialisées obtenues auprès de l'AFD et FUN-MOOC sur les enjeux environnementaux et climatiques.</p>
+        </div>
+
+        <div className="attest-grid">
+          {ATTESTATIONS.map((a,i) => {
+            const m = ATTEST_META[i] || ATTEST_META[0];
+            return (
+              <div key={i} className={`attest-card reveal up${vis?" vis":""}`} style={{animationDelay:`${.1+i*.13}s`}}>
+                <div className="attest-icon-ring" style={{background:m.bgRing}}>
+                  <Icon name={m.iconName} size={28} color={a.issuerColor} stroke={1.5}/>
+                </div>
+                <div className="attest-issuer" style={{color:a.issuerColor}}>
+                  {a.issuer} · {a.year}
+                </div>
+                <div className="attest-title">{a.title}</div>
+                <p className="attest-desc">{a.desc}</p>
+                <div className="attest-skills">
+                  {a.skills.map(s=>(
+                    <span key={s} style={{padding:"3px 10px",borderRadius:12,fontSize:10.5,fontWeight:700,background:`${a.issuerColor}14`,color:a.issuerColor,border:`1px solid ${a.issuerColor}25`}}>{s}</span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 10 — SERVICES
+───────────────────────────────────────────────────── */
+const Services = () => {
+  const [ref,vis] = useInView();
+  return (
+    <section id="services">
+      <div className="wrap" ref={ref}>
+        <div style={{textAlign:"center",marginBottom:52}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow" style={{justifyContent:"center"}}><div className="eyebrow-line"/>Prestations</div>
+          <h2 className="s-title" style={{textAlign:"center"}}>Ce que je peux <span className="accent">apporter</span></h2>
+          <p className="s-desc" style={{margin:"0 auto",textAlign:"center"}}>Prestations pour institutions, ONG, cabinets de conseil, BCEAO, Banque Mondiale, AFD et centres de recherche.</p>
+        </div>
+        <div className="services-grid">
+          {SERVICES.map((s,i) => (
+            <div key={s.title} className={`srv reveal up${vis?" vis":""}`} style={{animationDelay:`${i*0.09}s`}}>
+              <div className="srv-icon">
+                <Icon name={SERVICE_ICONS[i]} size={24} color="var(--teal)"/>
+              </div>
+              <div className="srv-title">{s.title}</div>
+              <p className="srv-desc">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 11 — CENTRES D'INTÉRÊT
+───────────────────────────────────────────────────── */
+const Interests = () => {
+  const [ref,vis] = useInView();
+  return (
+    <section id="interests">
+      <div className="wrap" ref={ref}>
+        <div style={{textAlign:"center",marginBottom:48}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow" style={{justifyContent:"center"}}><div className="eyebrow-line"/>Passions</div>
+          <h2 className="s-title" style={{textAlign:"center"}}>Centres d'<span className="accent">Intérêt</span></h2>
+        </div>
+        <div className="interests-grid">
+          {INTERESTS.map((label,i) => (
+            <div key={label} className={`int-card reveal up${vis?" vis":""}`} style={{animationDelay:`${i*0.07}s`}}>
+              <div className="int-icon">
+                <Icon name={INTEREST_ICONS[label]||"target"} size={20} color="var(--cobalt)"/>
+              </div>
+              <span className="int-label">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 12 — CONTACT
+───────────────────────────────────────────────────── */
+const Contact = () => {
+  const [ref,vis] = useInView();
+  const [form,setForm] = useState({name:"",email:"",subject:"",message:""});
+  const [sent,setSent] = useState(false);
+
+  const handleSend = () => {
+    if (!form.name || !form.email) return;
+    const body = `Bonjour M. ASSOGBA,\n\nNom : ${form.name}\nEmail : ${form.email}\nSujet : ${form.subject}\n\n${form.message}`;
+    window.location.href = `mailto:${PROFILE.email}?subject=${encodeURIComponent(form.subject||"Contact Portfolio")}&body=${encodeURIComponent(body)}`;
+    setSent(true);
+    setTimeout(() => setSent(false), 4000);
+  };
+
+  return (
+    <section id="contact">
+      <div className="wrap" ref={ref}>
+        <div style={{textAlign:"center",marginBottom:52}} className={`reveal up${vis?" vis":""}`}>
+          <div className="eyebrow" style={{justifyContent:"center"}}><div className="eyebrow-line"/>Contact</div>
+          <h2 className="s-title" style={{textAlign:"center"}}>Travaillons <span className="accent">ensemble</span></h2>
+          <p className="s-desc" style={{margin:"0 auto",textAlign:"center"}}>Disponible pour des missions de recherche, consulting, analyse économique ou collaboration avec des institutions internationales.</p>
+        </div>
+
+        <div className="contact-grid">
+          {/* Info left */}
+          <div className={`reveal left${vis?" vis":""} d1`}>
+            {[
+              {icon:"phone",  label:"Téléphone", val:PROFILE.phone,  href:`tel:${PROFILE.phone}`},
+              {icon:"mail",   label:"Email",     val:PROFILE.email,  href:`mailto:${PROFILE.email}`},
+              {icon:"mapPin", label:"Adresse",   val:PROFILE.address, href:null},
+            ].map(item => (
+              <div key={item.label} className="contact-info-item">
+                <div className="ci-icon"><Icon name={item.icon} size={20} color="var(--teal)"/></div>
+                <div>
+                  <div className="ci-label">{item.label}</div>
+                  {item.href
+                    ? <a href={item.href} className="ci-val">{item.val}</a>
+                    : <span className="ci-val">{item.val}</span>
+                  }
+                </div>
+              </div>
+            ))}
+
+            {/* Réseaux §15 */}
+            <div className="socials">
+              {[
+                {icon:"linkedin",   label:"LinkedIn",     href:PROFILE.linkedin},
+                {icon:"github",     label:"GitHub",       href:PROFILE.github},
+                {icon:"microscope", label:"ResearchGate", href:PROFILE.researchgate},
+              ].map(s => (
+                <a key={s.label} href={s.href} className="social-btn">
+                  <Icon name={s.icon} size={15} color="var(--cobalt)"/>{s.label}
+                </a>
+              ))}
+            </div>
+
+            <div className="availability-box">
+              <div className="avail-dot"/>
+              <div>
+                <div style={{fontWeight:700,fontSize:14,color:"var(--text)",marginBottom:4}}>Disponible pour missions</div>
+                <p style={{fontSize:13,color:"var(--muted)",lineHeight:1.65}}>Ouvert aux collaborations avec BCEAO, Banque Mondiale, PNUD, AFD, ONG et centres de recherche.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Form right */}
+          <div className={`reveal right${vis?" vis":""} d2`}>
+            <div className="form-card">
+              <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:22,fontWeight:400,color:"var(--navy)",marginBottom:24}}>Envoyer un message</h3>
+
+              <div className="form-row">
+                <div>
+                  <label className="f-label">Nom *</label>
+                  <input className="f-input" placeholder="Votre nom" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+                </div>
+                <div>
+                  <label className="f-label">Email *</label>
+                  <input className="f-input" type="email" placeholder="votre@email.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="f-label">Sujet</label>
+                <select className="f-input" value={form.subject} onChange={e=>setForm({...form,subject:e.target.value})}>
+                  <option value="">Sélectionnez…</option>
+                  <option>Proposition de collaboration</option>
+                  <option>Offre de stage / emploi</option>
+                  <option>Mission de consulting</option>
+                  <option>Demande de recherche</option>
+                  <option>Partenariat institutionnel</option>
+                  <option>Autre</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="f-label">Message</label>
+                <textarea className="f-input" rows={5} placeholder="Décrivez votre projet…" value={form.message} onChange={e=>setForm({...form,message:e.target.value})}/>
+              </div>
+
+              <button className="btn btn-teal" onClick={handleSend}
+                disabled={!form.name||!form.email}
+                style={{width:"100%",justifyContent:"center",fontSize:15,padding:"14px"}}>
+                {sent
+                  ? <><Icon name="check" size={17} color="#fff"/> Message envoyé !</>
+                  : <><Icon name="send"  size={17} color="#fff"/> Envoyer le message</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────
+   SECTION 13 — FOOTER
+───────────────────────────────────────────────────── */
+const Footer = () => (
+  <footer>
+    <div className="wrap">
+      <div className="footer-inner">
+        <div>
+          <div className="footer-brand-name">Vincent ASSOGBA</div>
+          <div className="footer-brand-tag">Econometrician · Data Analyst · Economic Researcher</div>
+        </div>
+        <div className="footer-copy">© 2026 Adéchinan Vincent ASSOGBA. Tous droits réservés.</div>
+        <div className="footer-icons">
+          {[
+            {icon:"mail",       href:`mailto:${PROFILE.email}`},
+            {icon:"phone",      href:`tel:${PROFILE.phone}`},
+            {icon:"linkedin",   href:PROFILE.linkedin},
+            {icon:"github",     href:PROFILE.github},
+            {icon:"microscope", href:PROFILE.researchgate},
+          ].map((l,i)=>(
+            <a key={i} href={l.href} className="f-icon-btn">
+              <Icon name={l.icon} size={16} color="rgba(255,255,255,.5)"/>
+            </a>
+          ))}
+        </div>
+      </div>
+      <div className="footer-nav">
+        {NAV.map(([label,id])=>(
+          <button key={id} className="f-nav-btn" onClick={()=>go(id)}>{label}</button>
+        ))}
+      </div>
+    </div>
+  </footer>
+);
+
+/* ─────────────────────────────────────────────────────
+   ROOT APP
+   13 sections from portfolio-plan.md:
+   Hero · About · Stats · Education · Skills · Tools ·
+   Research · Certifications · Attestations · Services ·
+   Interests · Contact · Footer
+───────────────────────────────────────────────────── */
+export default function App() {
+  return (
+    <>
+      <GlobalCSS/>
+      <Nav/>
+      <main>
+        <Hero/>          {/* 1  */}
+        <About/>         {/* 2  */}
+        <Stats/>         {/* 3  */}
+        <Education/>     {/* 4  */}
+        <Skills/>        {/* 5  */}
+        <Tools/>         {/* 6  */}
+        <Research/>      {/* 7  */}
+        <Certifications/>{/* 8  */}
+        <Attestations/>  {/* 9  */}
+        <Services/>      {/* 10 */}
+        <Interests/>     {/* 11 */}
+        <Contact/>       {/* 12 */}
+      </main>
+      <Footer/>          {/* 13 */}
+    </>
+  );
+}
